@@ -1,0 +1,196 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div>
+        <h2>Student Information System</h2>
+        <p>
+            <input type="hidden" name="RoleId" id="RoleId" />
+            Role Name <input type="text" name="RoleName" id="RoleName" />
+        </p>
+        @*<p>
+            Address <input type="text" name="address" id="address" />
+        </p>
+        <p>
+            Date of Birth <input type="date" name="dob" id="dob" />
+        </p>
+        <p>
+            Picture <input type="file" name="imguploader" id="imguploader" accept="image/*" />
+        </p>*@
+        <p>
+            <button type="button" id="btnAdd">Add New</button>
+            <button type="button" id="btnUpdate">Update</button>
+            <button type="button" onclick="reset();">Reset</button>
+        </p>
+    </div>
+    <div>
+        <table id="tblRole" border="1" style="width:100%" cellpadding="10"></table>
+    </div>
+    <script>
+        $(document).ready(function () {
+            console.log("ready!");
+            reset();
+        });
+
+
+        $("#btnAdd").on("click", function (e) {
+            e.preventDefault();
+
+            //var file = $("#imguploader").get(0).files[0];
+            var formData = new FormData();
+            //formData.set("file", file, file.name);
+            formData.set("RoleId", $('#RoleId').val());
+            formData.set("RoleName", $('#RoleName').val());
+            //formData.set("address", $('#address').val());
+            //formData.set("dob", $('#dob').val());
+
+            $.ajax({
+                url: '@Url.Action("InsertRole", "Role")',
+                method: "post",
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false
+            })
+            .then(function (result) {
+                console.log(result);
+                reset();
+            });
+        });
+
+        $("#btnUpdate").on("click", function (e) {
+            e.preventDefault();
+
+            //var file = $("#imguploader").get(0).files[0];
+            var formData = new FormData();
+            //formData.set("file", file, file.name);
+            formData.set("RoleId", $('#RoleId').val());
+            formData.set("RoleName", $('#RoleName').val());
+            //formData.set("address", $('#address').val());
+            //formData.set("dob", $('#dob').val());
+
+            $.ajax({
+                url: '@Url.Action("UpdateRole", "Role")',
+                method: "post",
+                data: formData,
+                cache: false,
+                contentType: false,
+                processData: false
+            })
+            .then(function (result) {
+                console.log(result);
+                reset();
+            });
+        });
+
+        function reset() {
+            $('#RoleId').val('');
+            $('#RoleName').val('');
+            //$('#address').val('');
+            //$('#dob').val('');
+
+            $('#btnAdd').show();
+            $('#btnUpdate').hide();
+          /*  $('#imguploader').val(null);*/
+            getRoles();
+        }
+
+        function getRoles() {
+            $('#tblRole').empty();
+            var ajaxReq = {};
+            ajaxReq.url = "/Role/GetRoles";
+            ajaxReq.type = "GET";
+            ajaxReq.datatype = "json";
+            ajaxReq.contentType = "application/json";
+            ajaxReq.success = function (res) {
+                console.log(res);
+                $('#tblRole').append(
+                    '<tr>'
+                    + '<th>RoleId</th>'
+                    + '<th>RoleName</th>'
+                    //+ '<th>Date of Birth</th>'
+                    //+ '<th>Address</th>'
+                    //+ '<th>Picture</th>'
+                    + '<th>Options</th>'
+                    + '</tr>'
+                );
+
+                for (var i = 0; i < res.length; i++) {
+                    var sl = i + 1;
+                    $("#tblRole").append(
+                        '<tr>'
+                        + '<td>' + res[i].RoleId + '</td>'
+                        + '<td>' + res[i].RoleName + '</td>'
+                        //+ '<td>' + convertDateToISO(res[i].DoB) + '</td>'
+                        //+ '<td>' + res[i].Address + '</td>'
+                        //+ '<td><img src=' + res[i].Picture + ' /></td>'
+                        + '<td>'
+                        + '<button class="btn btn-default" onclick= "getRoleById(' + res[i].RoleId + ')" ><i class="glyphicon glyphicon-pencil"></i> Edit</button > '
+                        + '<button class="btn btn-danger" onclick= "removeRoleById(' + res[i].RoleId + ')" ><i class="glyphicon glyphicon-trash"></i> Remove</button > '
+                        + '</td>'
+                        + '</tr>'
+                    );
+                }
+            };
+            ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+            $.ajax(ajaxReq);
+        }
+
+        function getRoleById(RoleId) {
+            var ajaxReq = {};
+            ajaxReq.url = "/Role/GetRoleById?id=" + RoleId;
+            ajaxReq.type = "GET";
+            ajaxReq.datatype = "json";
+            ajaxReq.contentType = "application/json";
+            ajaxReq.success = function (res) {
+                $('#RoleId').val(res.RoleId);
+                $('#RoleName').val(res.RoleName);
+                //$('#address').val(res.Address);
+                //$('#dob').val(convertDateToISO(res.DoB));
+                $('#btnAdd').hide();
+                $('#btnUpdate').show();
+            };
+            ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+            $.ajax(ajaxReq);
+        }
+
+        function removeRoleById(RoleId) {
+            if (confirm('Are you sure to delete?')) {
+                var ajaxReq = {};
+                ajaxReq.url = "/Role/DeleteRole";
+                ajaxReq.data = JSON.stringify({ id: RoleId });
+                ajaxReq.type = "POST";
+                ajaxReq.datatype = "json";
+                ajaxReq.contentType = "application/json";
+                ajaxReq.success = function (res) {
+                    console.log(res);
+                    reset();
+                };
+                ajaxReq.error = function () { console.log(ajaxReq.error.message); };
+                $.ajax(ajaxReq);
+            }
+        }
+
+        //function convertDateToISO(date) {
+        //    var nDate = date === null ? 0 : parseInt((date).toString().substr(6, 13));
+        //    var strDate = new Date(nDate).toISOString().substr(0, 10);
+        //    return strDate;
+        //}
+    </script>
+
+
+</body>
+</html>
+
+
